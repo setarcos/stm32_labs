@@ -111,6 +111,9 @@ int main(void)
     HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
     HAL_Delay(5000);
     HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+  //  HAL_SuspendTick();
+  //  HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+  //  HAL_ResumeTick(); // to test sleep mode, comment out following two lines
     HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
     SystemClock_Config();
     HAL_Delay(1000);
