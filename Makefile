@@ -1,4 +1,4 @@
-PRJ=adc blinky blinky2 dac lcd pwr uart usbmouse uart_at
+PRJ=adc blinky blinky2 dac lcd pwr uart usbmouse uart_at ts
 all:
 	$(foreach n,$(PRJ), make -C $(n);)
 clean:
