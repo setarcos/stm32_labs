@@ -1,4 +1,4 @@
-TARGET = uart
+TARGET = ts
 
 CORTEX = cortex-m4
 FAMILY = STM32F4

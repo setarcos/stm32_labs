@@ -1,4 +1,4 @@
-TARGET = draw
+TARGET = hostmsc
 
 CORTEX = cortex-m4
 FAMILY = STM32F4
@@ -16,13 +16,16 @@ OPT = -Og
 FIRM_PATH = ../Firmware
 HAL_PATH = $(FIRM_PATH)/Drivers/STM32F4xx_HAL_Driver
 CMSIS_PATH = $(FIRM_PATH)/Drivers/CMSIS
-BSP_PATH = $(FIRM_PATH)/Drivers/BSP/STM32469I-Discovery
-LCD_PATH = $(FIRM_PATH)/Drivers/BSP/Components/otm8009a
-
+USBD_PATH = $(FIRM_PATH)/Middlewares/ST/STM32_USB_Host_Library/Core
+MSC_PATH = $(FIRM_PATH)/Middlewares/ST/STM32_USB_Host_Library/Class/MSC
+FF_PATH = $(FIRM_PATH)/Middlewares/Third_Party/FatFs/src
 #######################################
 # source files
 #######################################
 SRC = $(wildcard Src/*.c)
+SRC += $(MSC_PATH)/Src/usbh_msc.c
+SRC += $(MSC_PATH)/Src/usbh_msc_bot.c
+SRC += $(MSC_PATH)/Src/usbh_msc_scsi.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_cortex.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_rcc.c
@@ -30,19 +33,21 @@ SRC += $(HAL_PATH)/Src/stm32f4xx_hal_rcc_ex.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_pwr.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_pwr_ex.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_gpio.c
-SRC += $(HAL_PATH)/Src/stm32f4xx_hal_ltdc.c
-SRC += $(HAL_PATH)/Src/stm32f4xx_hal_ltdc_ex.c
+SRC += $(HAL_PATH)/Src/stm32f4xx_hal_tim.c
+SRC += $(HAL_PATH)/Src/stm32f4xx_hal_hcd.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_dma.c
-SRC += $(HAL_PATH)/Src/stm32f4xx_hal_dma2d.c
-SRC += $(HAL_PATH)/Src/stm32f4xx_hal_i2c.c
-SRC += $(HAL_PATH)/Src/stm32f4xx_hal_sdram.c
-SRC += $(HAL_PATH)/Src/stm32f4xx_ll_fmc.c
-SRC += $(HAL_PATH)/Src/stm32f4xx_hal_dsi.c
-SRC += $(BSP_PATH)/stm32469i_discovery.c
-SRC += $(BSP_PATH)/stm32469i_discovery_lcd.c
-SRC += $(BSP_PATH)/stm32469i_discovery_sdram.c
-SRC += $(LCD_PATH)/otm8009a.c
-
+SRC += $(HAL_PATH)/Src/stm32f4xx_hal_adc.c
+SRC += $(HAL_PATH)/Src/stm32f4xx_hal_exti.c
+SRC += $(HAL_PATH)/Src/stm32f4xx_hal_flash.c
+SRC += $(HAL_PATH)/Src/stm32f4xx_hal_uart.c
+SRC += $(HAL_PATH)/Src/stm32f4xx_ll_usb.c
+SRC += $(USBD_PATH)/Src/usbh_core.c
+SRC += $(USBD_PATH)/Src/usbh_ctlreq.c
+SRC += $(USBD_PATH)/Src/usbh_ioreq.c
+SRC += $(USBD_PATH)/Src/usbh_pipes.c
+SRC += $(FF_PATH)/ff.c
+SRC += $(FF_PATH)/ff_gen_drv.c
+SRC += $(FF_PATH)/diskio.c
 
 # Build path
 BUILD_DIR = build
@@ -83,7 +88,7 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 AS_DEFS = 
 
 # C defines
-C_DEFS = -DUSE_HAL_DRIVER -D$(CHIP) -D$(FAMILY) -D$(BOARD) -DUSE_STM32469I_DISCO_REVB
+C_DEFS = -DUSE_HAL_DRIVER -D$(CHIP) -D$(FAMILY) -D$(BOARD)
 
 # AS includes
 AS_INCLUDES = 
@@ -93,7 +98,12 @@ INCS = Inc
 INCS += $(CMSIS_PATH)/Device/ST/STM32F4xx/Include
 INCS += $(CMSIS_PATH)/Include
 INCS += $(FIRM_PATH)/Drivers/STM32F4xx_HAL_Driver/Inc
-INCS += $(BSP_PATH)
+INCS += $(USBD_PATH)/Inc
+INCS += $(MSC_PATH)/Inc
+INCS += $(FF_PATH)
+INCS += USB_DEVICE/Target
+INCS += USB_DEVICE/App
+INCS += HID/Inc
 
 C_INCLUDES = $(patsubst %,-I%,$(INCS))
 
@@ -109,7 +119,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = ../common/STM32F469NIHx_FLASH.ld
+LDSCRIPT = STM32F469NIHx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
