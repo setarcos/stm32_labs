@@ -32,12 +32,16 @@ int last_tick = 0;
 FIL MyFile;
 const char* name = "stm32.txt";
 const uint8_t wtext[] = "Hello world!\n";
+char uart_buf[100];
+int uart_len;
+int fillbuf;
 //extern const Diskio_drvTypeDef  USBH_Driver;
 /* Private function prototypes ---------------------------------------------- */
 static void SystemClock_Config(void);
 static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
 static void MSC_InitApplication(void);
 static void Error_Handler(void);
+static void ExplreDir(int view);
 /* Private functions -------------------------------------------------------- */
 
 /**
@@ -70,25 +74,111 @@ int main(void)
   {
     /* USB Host Background task */
     USBH_Process(&hUSBHost);
-    if ((Appli_state == APPLICATION_READY) && (HAL_GetTick() - last_tick > 200)) {
-      if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET) {
-        last_tick = HAL_GetTick();
-        /*Create a file*/
-        if (f_open(&MyFile, name, FA_OPEN_ALWAYS | FA_WRITE) != FR_OK ) {
-          /* Creation failed */
-          HAL_UART_Transmit(&huart3, (uint8_t *)"E: Open!\r\n", 10, 1000);
-        } else {
-          UINT bytesWritten;
-          HAL_UART_Transmit(&huart3, (uint8_t *)"I: Write!\r\n", 11, 1000);
-          f_lseek(&MyFile, f_size(&MyFile));
-          /*write message to the file. Use variable wtext, bytesWritten*/
-          f_write(&MyFile, wtext, sizeof(wtext) - 1, &bytesWritten);
-          /*close the file*/
-          f_close(&MyFile);
+
+    if (Appli_state != APPLICATION_READY) continue;
+
+    /* Got key pressed */
+    if ((HAL_GetTick() - last_tick > 200) && (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET)) {
+      last_tick = HAL_GetTick();
+      /*Create a file*/
+      if (f_open(&MyFile, name, FA_OPEN_ALWAYS | FA_WRITE) != FR_OK ) {
+        /* Creation failed */
+        HAL_UART_Transmit(&huart3, (uint8_t *)"E: Open!\r\n", 10, 1000);
+      } else {
+        UINT bytesWritten;
+        HAL_UART_Transmit(&huart3, (uint8_t *)"I: Write!\r\n", 11, 1000);
+        f_lseek(&MyFile, f_size(&MyFile));
+        /*write message to the file. Use variable wtext, bytesWritten*/
+        f_write(&MyFile, wtext, sizeof(wtext) - 1, &bytesWritten);
+        /*close the file*/
+        f_close(&MyFile);
+      }
+    }
+
+    if ((USART3->SR & USART_SR_RXNE) != 0) { /* Got command */
+      char c = USART3->DR;
+      static int idx;
+      if (fillbuf == 1) {
+        USART3->DR = c;
+        uart_buf[idx++] = c;
+        if (c == '\n') {
+          uart_buf[idx - 1] = 0;
+          if (f_open(&MyFile, uart_buf, FA_OPEN_APPEND | FA_WRITE) != FR_OK ) {
+            HAL_UART_Transmit(&huart3, (uint8_t *)"E: Open!\r\n", 10, 1000);
+            fillbuf = 0;
+          } else
+            fillbuf = 2;
+          idx = 0;
         }
+        continue;
+      }
+      if (fillbuf == 2) {
+        USART3->DR = c;
+        uart_buf[idx++] = c;
+        if (c == '\n') {
+          if (idx == 1) {
+            f_close(&MyFile);
+            idx = 0;
+            fillbuf = 0;
+          } else {
+            UINT bytesWritten;
+            f_write(&MyFile, uart_buf, idx, &bytesWritten);
+            idx = 0;
+          }
+        }
+        continue;
+      }
+      if (c == 'l') { /* List files */
+        ExplreDir(0);
+      }
+      if (c >= '0' && c <= '9') { /* View file */
+        ExplreDir(c - '0');
+      }
+      if (c == 'w') {
+        fillbuf = 1;
+        HAL_UART_Transmit(&huart3, (uint8_t *)"File Name: ", 11, 1000);
+        idx = 0;
       }
     }
   }
+}
+
+void ExplreDir(int view)
+{
+  if (view == 0) HAL_UART_Transmit(&huart3, (uint8_t *)"File List:\r\n", 12, 1000);
+  DIR dir;
+  FRESULT res = FR_OK;
+  FILINFO fno;
+  res = f_opendir(&dir, USBDISKPath);
+  if (res != FR_OK) {
+    HAL_UART_Transmit(&huart3, (uint8_t *)"E: OpDIR!\r\n", 11, 1000);
+    return;
+  }
+  int idx = 0;
+  while (USBH_MSC_IsReady(&hUSBHost)) {
+    idx++;
+    if (idx > 9) break;
+    res = f_readdir(&dir, &fno);
+    if (res != FR_OK || fno.fname[0] == 0) break;
+    if (fno.fname[0] == '.') continue;
+    if (view == 0) {
+      uart_len = sprintf(uart_buf, "%d: %s\r\n", idx, fno.fname);
+      HAL_UART_Transmit(&huart3, (uint8_t*)uart_buf, uart_len, 1000);
+    }
+    if (view == idx) {
+      if (f_open(&MyFile, fno.fname, FA_READ) == FR_OK ) {
+        UINT br;
+        while (1) {
+          f_read(&MyFile, uart_buf, 10, &br);
+          HAL_UART_Transmit(&huart3, (uint8_t *)uart_buf, br, 1000);
+          if (br < 10) break;
+        }
+        f_close(&MyFile);
+      }
+      break;
+    }
+  }
+  f_closedir(&dir);
 }
 
 /**
@@ -166,6 +256,8 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
     Appli_state = APPLICATION_START;
     /* FATFS_LinkDriver will be called with MX_FATFS_Init if using STM32CubeIDE */
     FATFS_LinkDriver(&USBH_Driver, USBDISKPath);
+    uart_len = sprintf(uart_buf, "I: path=%s\r\n", USBDISKPath);
+    HAL_UART_Transmit(&huart3, (uint8_t *)uart_buf, uart_len, 1000);
     break;
 
   default:

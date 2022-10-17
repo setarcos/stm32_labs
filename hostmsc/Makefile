@@ -48,6 +48,7 @@ SRC += $(USBD_PATH)/Src/usbh_pipes.c
 SRC += $(FF_PATH)/ff.c
 SRC += $(FF_PATH)/ff_gen_drv.c
 SRC += $(FF_PATH)/diskio.c
+SRC += $(FF_PATH)/option/unicode.c
 
 # Build path
 BUILD_DIR = build
