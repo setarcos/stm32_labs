@@ -99,10 +99,8 @@ int main(void)
     HAL_ADC_Start(&hadc1);
     HAL_ADC_PollForConversion(&hadc1, 100);
     int value = HAL_ADC_GetValue(&hadc1);
-    sprintf((char*)buf, "%d,%5d", index, value);
-    buf[7] = '\r';
-    buf[8] = '\n';
-    HAL_UART_Transmit(&huart3, buf, 9, 200);
+    int len = snprintf((char*)buf, 10, "%d,%5d\r\n", index, value);
+    HAL_UART_Transmit(&huart3, buf, len, 200);
     HAL_Delay(500);
     if (index) index = 0;
     else index = 1;
