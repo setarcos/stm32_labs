@@ -51,6 +51,11 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+
+extern int buf[];
+extern DAC_HandleTypeDef hdac;
+extern TIM_HandleTypeDef htim;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -156,6 +161,17 @@ void SysTick_Handler(void)
   HAL_IncTick();
 }
 
+#ifndef LAB1
+void TIM6_DAC_IRQHandler(void)
+{
+  static int count;
+  __HAL_TIM_CLEAR_IT(&htim, TIM_IT_UPDATE);
+  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, buf[count++]);
+  if (count == 200) count = 0;
+  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
+}
+#endif
 /******************************************************************************/
 /*                 STM32F4xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */

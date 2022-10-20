@@ -36,7 +36,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include <math.h>
 /** @addtogroup STM32F4xx_HAL_Examples
   * @{
   */
@@ -49,8 +49,13 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+int buf[200];
+DAC_HandleTypeDef    hdac = {0};
+TIM_HandleTypeDef  htim = {0};
+
+
 /* Private function prototypes -----------------------------------------------*/
-static void DAC_Ch1_TriangleConfig(void);
+static void DAC_Init(void);
 static void TIM6_Config(void);
 static void SystemClock_Config(void);
 static void Error_Handler(void);
@@ -80,6 +85,8 @@ int main(void)
   /* Configure the system clock to 180 MHz */
   SystemClock_Config();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_DAC_CLK_ENABLE();
 
   GPIO_InitTypeDef gpio_init_structure;
   gpio_init_structure.Pin = LED3_Pin|LED2_Pin;
@@ -88,12 +95,22 @@ int main(void)
   gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &gpio_init_structure);
 
+  gpio_init_structure.Pin = GPIO_PIN_4;
+  gpio_init_structure.Mode = GPIO_MODE_ANALOG;
+  gpio_init_structure.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &gpio_init_structure);
+
+
   HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
   /* Configure the TIM peripheral #######################################*/
   TIM6_Config();
   /* Triangle Wave generator -------------------------------------------*/
-  DAC_Ch1_TriangleConfig();
+  DAC_Init();
+#ifndef LAB1
+  for (int i = 0; i < 200; ++i)
+    buf[i] = sin(3.1415926 / 100 * i) * 1000 + 1200;
+#endif
 
   /* Infinite loop */
   while (1)
@@ -194,13 +211,12 @@ static void Error_Handler(void)
 }
 
 /**
-  * @brief  DAC Channel1 Triangle Configuration
+  * @brief  DAC Channel1 Configuration
   * @param  None
   * @retval None
   */
-static void DAC_Ch1_TriangleConfig(void)
+static void DAC_Init(void)
 {
-  DAC_HandleTypeDef    hdac = {0};
   DAC_ChannelConfTypeDef sConfig = {0};
 
   /*##-1- Initialize the DAC peripheral ######################################*/
@@ -212,7 +228,11 @@ static void DAC_Ch1_TriangleConfig(void)
   }
 
   /*##-2- DAC channel1 Configuration #########################################*/
+#ifdef LAB1
   sConfig.DAC_Trigger = DAC_TRIGGER_T6_TRGO;
+#else
+  sConfig.DAC_Trigger = DAC_TRIGGER_SOFTWARE;
+#endif
   sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
 
   if (HAL_DAC_ConfigChannel(&hdac, &sConfig, DACx_CHANNEL) != HAL_OK)
@@ -221,6 +241,7 @@ static void DAC_Ch1_TriangleConfig(void)
     Error_Handler();
   }
 
+#ifdef LAB1
   /*##-3- DAC channel1 Triangle Wave generation configuration ################*/
   if (HAL_DACEx_TriangleWaveGenerate(&hdac, DACx_CHANNEL, DAC_TRIANGLEAMPLITUDE_1023) != HAL_OK)
   {
@@ -241,6 +262,7 @@ static void DAC_Ch1_TriangleConfig(void)
     /* Setting value Error */
     Error_Handler();
   }
+#endif
 }
 
 /**
@@ -252,8 +274,7 @@ static void DAC_Ch1_TriangleConfig(void)
   */
 void TIM6_Config(void)
 {
-  TIM_HandleTypeDef  htim = {0};
-
+  __HAL_RCC_TIM6_CLK_ENABLE();
   /*##-1- Configure the TIM peripheral #######################################*/
   /* Time base configuration */
   htim.Instance = TIM6;
@@ -269,7 +290,12 @@ void TIM6_Config(void)
   TIM6->CR2 = TIM_TRGO_UPDATE;
 
   /*##-2- Enable TIM peripheral counter ######################################*/
+#ifdef LAB1
   HAL_TIM_Base_Start(&htim);
+#else
+  HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
+  HAL_TIM_Base_Start_IT(&htim);
+#endif
 }
 #ifdef  USE_FULL_ASSERT
 
