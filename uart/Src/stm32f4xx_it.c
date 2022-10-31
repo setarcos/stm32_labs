@@ -176,6 +176,9 @@ void SysTick_Handler(void)
 
 void USART3_IRQHandler(void)
 {
+#ifdef LAB4
+  HAL_UART_IRQHandler(&huart3);
+#else
   uint8_t c = USART3->DR;
   if (c == '\r') {
     rxflag = 1;
@@ -185,6 +188,7 @@ void USART3_IRQHandler(void)
     huart3.pRxBuffPtr[huart3.RxXferCount] = c;
     if (huart3.RxXferCount < 9) huart3.RxXferCount++;
   }
+#endif
 }
 
 /**

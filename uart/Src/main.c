@@ -46,7 +46,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define LAB2
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart3;
@@ -54,7 +53,9 @@ int rxflag;
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
-
+#ifdef LAB4
+uint8_t buf[20];
+#endif
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -125,6 +126,11 @@ int main(void)
   NVIC_EnableIRQ(USART3_IRQn);
   SET_BIT(USART3->CR1, USART_CR1_RXNEIE);
 #endif
+#ifdef LAB4
+  NVIC_EnableIRQ(USART3_IRQn);
+  HAL_UART_Transmit_IT(&huart3, (uint8_t *)"Continue?\r\n", 11);
+  HAL_UART_Receive_IT(&huart3, buf, 10);
+#endif
 
   /* Infinite loop */
   while (1)
@@ -145,8 +151,23 @@ int main(void)
       rxflag = 0;
     }
 #endif
+#ifdef LAB3
+    uint8_t buf[2];
+    HAL_UART_Transmit(&huart3, (uint8_t *)"Continue?(y/n):", 15, 400);
+    while (HAL_UART_Receive(&huart3, buf, 1, 400) == HAL_TIMEOUT) continue;
+    if (buf[0] == 'y')
+      HAL_UART_Transmit(&huart3, (uint8_t *)"OK\r\n", 4, 400);
+#endif
   }
 }
+
+#ifdef LAB4
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  HAL_UART_Transmit_IT(&huart3, (uint8_t *)"OK\r\n", 4);
+  HAL_UART_Receive_IT(&huart3, buf, 10);
+}
+#endif
 
 /**
   * @brief  System Clock Configuration

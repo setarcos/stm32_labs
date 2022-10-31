@@ -26,6 +26,7 @@ SRC += $(HAL_PATH)/Src/stm32f4xx_hal_cortex.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_rcc.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_uart.c
 #SRC += $(HAL_PATH)/Src/stm32f4xx_hal_rcc_ex.c
+SRC += $(HAL_PATH)/Src/stm32f4xx_hal_dma.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_pwr.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_pwr_ex.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_gpio.c
@@ -69,7 +70,7 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 AS_DEFS = 
 
 # C defines
-C_DEFS = -DUSE_HAL_DRIVER -D$(CHIP) -D$(FAMILY) -D$(BOARD)
+C_DEFS = -DUSE_HAL_DRIVER -D$(CHIP) -D$(FAMILY) -D$(BOARD) -DLAB4
 
 # AS includes
 AS_INCLUDES = 
