@@ -77,6 +77,15 @@ int main(void)
 
   /* Configure the system clock to 180 MHz */
   SystemClock_Config();
+
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  GPIO_InitTypeDef gpio_init_structure;
+  gpio_init_structure.Pin = GPIO_PIN_0;
+  gpio_init_structure.Mode = GPIO_MODE_IT_RISING;
+  gpio_init_structure.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &gpio_init_structure); // Wake up key
+
   BSP_SDRAM_Init();
   BSP_LCD_InitEx(LCD_ORIENTATION_PORTRAIT);
   BSP_LCD_LayerDefaultInit(0, LAYER0_ADDRESS);
@@ -102,9 +111,25 @@ int main(void)
   sprintf(str, "dma:%d", dmadelay);
   BSP_LCD_DisplayStringAt(10, 30, (uint8_t*)str, LEFT_MODE);
 
+
+  int color = 1;
+  while (1) {
+    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET)
+      break;
+    HAL_LTDC_ProgramLineEvent(&hltdc_eval, 100);
+    while (line == 0);
+    line = 0;
+    if (color)
+      BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
+    else
+      BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+    color = 1 - color;
+    BSP_LCD_FillRect(0, 0, 480, 800); // Show tearing effect
+    HAL_Delay(500);
+  }
+
   int x1 = 100, y1 = 200;
   int dx = 2, dy = 4;
-  int color = 1;
 
   /* Infinite loop */
   while (1)
