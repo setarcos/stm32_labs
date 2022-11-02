@@ -35,8 +35,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "usb_device.h"
 #include "usbd_hid.h"
+#include "usbd_desc.h"
 
 /** @addtogroup STM32F4xx_HAL_Examples
   * @{
@@ -53,7 +53,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void ADC1_Init(void);
-extern USBD_HandleTypeDef hUsbDeviceFS;
+USBD_HandleTypeDef hUsbDeviceFS;
 ADC_HandleTypeDef hadc1;
 #define CLICK_REPORT_SIZE 5
 uint8_t click_report[CLICK_REPORT_SIZE] = {0};
@@ -101,7 +101,18 @@ int main(void)
   gpio_init_structure.Speed = GPIO_SPEED_FAST;
   HAL_GPIO_Init(GPIOA, &gpio_init_structure); // CN8, A5, PA4
 
-  MX_USB_DEVICE_Init();
+  if (USBD_Init(&hUsbDeviceFS, &FS_Desc, DEVICE_FS) != USBD_OK)
+  {
+    Error_Handler();
+  }
+  if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_HID) != USBD_OK)
+  {
+    Error_Handler();
+  }
+  if (USBD_Start(&hUsbDeviceFS) != USBD_OK)
+  {
+    Error_Handler();
+  }
   ADC1_Init();
 
   ADC_ChannelConfTypeDef sConfig = {0};

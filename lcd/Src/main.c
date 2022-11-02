@@ -111,6 +111,8 @@ int main(void)
   sprintf(str, "dma:%d", dmadelay);
   BSP_LCD_DisplayStringAt(10, 30, (uint8_t*)str, LEFT_MODE);
 
+  while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET);
+  HAL_Delay(500);
 
   int color = 1;
   while (1) {
@@ -127,7 +129,8 @@ int main(void)
     BSP_LCD_FillRect(0, 0, 480, 800); // Show tearing effect
     HAL_Delay(500);
   }
-
+  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+  BSP_LCD_FillRect(0, 0, 480, 800); // Clear screen
   int x1 = 100, y1 = 200;
   int dx = 2, dy = 4;
 

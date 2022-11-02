@@ -17,14 +17,13 @@ FIRM_PATH = ../Firmware
 HAL_PATH = $(FIRM_PATH)/Drivers/STM32F4xx_HAL_Driver
 CMSIS_PATH = $(FIRM_PATH)/Drivers/CMSIS
 USBD_PATH = $(FIRM_PATH)/Middlewares/ST/STM32_USB_Device_Library/Core
+HID_PATH = $(FIRM_PATH)/Middlewares/ST/STM32_USB_Device_Library/Class/HID
 
 #######################################
 # source files
 #######################################
 SRC = $(wildcard Src/*.c)
-SRC += $(wildcard USB_DEVICE/App/*.c)
-SRC += $(wildcard USB_DEVICE/Target/*.c)
-SRC += HID/Src/usbd_hid.c
+SRC += $(HID_PATH)/Src/usbd_hid.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_cortex.c
 SRC += $(HAL_PATH)/Src/stm32f4xx_hal_rcc.c
@@ -94,9 +93,7 @@ INCS += $(CMSIS_PATH)/Device/ST/STM32F4xx/Include
 INCS += $(CMSIS_PATH)/Include
 INCS += $(FIRM_PATH)/Drivers/STM32F4xx_HAL_Driver/Inc
 INCS += $(USBD_PATH)/Inc
-INCS += USB_DEVICE/Target
-INCS += USB_DEVICE/App
-INCS += HID/Inc
+INCS += $(HID_PATH)/Inc
 
 C_INCLUDES = $(patsubst %,-I%,$(INCS))
 
