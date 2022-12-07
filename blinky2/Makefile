@@ -7,7 +7,7 @@ CHIP = STM32F469xx
 BOARD = STM32F469I_DISCO
 
 # optimization
-OPT = -Og
+OPT = -g
 
 #######################################
 # paths
@@ -38,13 +38,12 @@ ASM = ../common/startup_stm32f469xx.s
 #######################################
 # binaries
 #######################################
-BINPATH = /usr/bin
 PREFIX = arm-none-eabi-
-CC = $(BINPATH)/$(PREFIX)gcc
-AS = $(BINPATH)/$(PREFIX)gcc -x assembler-with-cpp
-CP = $(BINPATH)/$(PREFIX)objcopy
-AR = $(BINPATH)/$(PREFIX)ar
-SZ = $(BINPATH)/$(PREFIX)size
+CC = $(PREFIX)gcc
+AS = $(PREFIX)gcc -x assembler-with-cpp
+CP = $(PREFIX)objcopy
+AR = $(PREFIX)ar
+SZ = $(PREFIX)size
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
  
@@ -131,6 +130,10 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	
 $(BUILD_DIR):
 	mkdir $@		
+
+# Debug
+debug:
+	openocd -f ../common/openocd.cfg -c init -c "reset halt" -c "debug_level 0"
 
 #######################################
 # program
