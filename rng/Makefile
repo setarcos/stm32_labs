@@ -70,7 +70,7 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 AS_DEFS = 
 
 # C defines
-C_DEFS = -DUSE_HAL_DRIVER -D$(CHIP) -D$(FAMILY) -D$(BOARD) -DLAB4
+C_DEFS = -DUSE_HAL_DRIVER -D$(CHIP) -D$(FAMILY) -D$(BOARD)
 
 # AS includes
 AS_INCLUDES = 
