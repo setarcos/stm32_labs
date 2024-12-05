@@ -17,7 +17,7 @@ FIRM_PATH = ../Firmware
 HAL_PATH = $(FIRM_PATH)/Drivers/STM32F4xx_HAL_Driver
 CMSIS_PATH = $(FIRM_PATH)/Drivers/CMSIS
 BSP_PATH = $(FIRM_PATH)/Drivers/BSP/STM32469I-Discovery
-LCD_PATH = $(FIRM_PATH)/Drivers/BSP/Components/otm8009a
+LCD_PATH = $(FIRM_PATH)/Drivers/BSP/Components
 
 #######################################
 # source files
@@ -41,7 +41,8 @@ SRC += $(HAL_PATH)/Src/stm32f4xx_hal_dsi.c
 SRC += $(BSP_PATH)/stm32469i_discovery.c
 SRC += $(BSP_PATH)/stm32469i_discovery_lcd.c
 SRC += $(BSP_PATH)/stm32469i_discovery_sdram.c
-SRC += $(LCD_PATH)/otm8009a.c
+SRC += $(LCD_PATH)/otm8009a/otm8009a.c
+SRC += $(LCD_PATH)/nt35510/nt35510.c
 
 
 # Build path
